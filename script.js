@@ -1,3 +1,7 @@
+// 앱별 저장소 분리: 같은 origin에서 다른 IHAB 앱과 데이터가 섞이지 않도록 고유 접두어 사용
+const PRODUCT_ID = 'speechear';
+const STORAGE_PREFIX = 'speechear_';
+
 const optionData = {
     center: [
         {
@@ -80,7 +84,7 @@ function toggleDiscount() {
 
 function generateInvoiceNumber() {
     const today = new Date().toISOString().substring(0, 10);
-    const key = `ihab_daily_counter_${today}`;
+    const key = `${STORAGE_PREFIX}daily_counter_${today}`;
     const next = parseInt(localStorage.getItem(key) || '0') + 1;
     localStorage.setItem(key, next.toString());
     return `${today}-${String(next).padStart(2, '0')}`;
@@ -542,7 +546,7 @@ function resetSystem() {
 }
 
 function getSavedList() {
-    return JSON.parse(localStorage.getItem('ihab_invoices') || '[]');
+    return JSON.parse(localStorage.getItem(STORAGE_PREFIX + 'invoices') || '[]');
 }
 
 function saveInvoice() {
@@ -563,6 +567,7 @@ function saveInvoice() {
         invoiceNumber: currentInvoiceNumber,
         applyDiscount,
         docType,
+        product: PRODUCT_ID,
         savedAt: new Date().toISOString(),
         type: currentType,
         selectedOptions: [...selectedOptions],
@@ -580,7 +585,7 @@ function saveInvoice() {
     } else {
         list.unshift(invoice);
     }
-    localStorage.setItem('ihab_invoices', JSON.stringify(list));
+    localStorage.setItem(STORAGE_PREFIX + 'invoices', JSON.stringify(list));
     currentEditingId = invoice.id;
     alert(`${docTypeLabels[docType].name}가 저장되었습니다.`);
 }
@@ -705,11 +710,11 @@ function buildSessionSnapshot() {
 }
 
 function saveCurrentSession() {
-    localStorage.setItem('ihab_current_session', JSON.stringify(buildSessionSnapshot()));
+    localStorage.setItem(STORAGE_PREFIX + 'current_session', JSON.stringify(buildSessionSnapshot()));
 }
 
 function clearCurrentSession() {
-    localStorage.removeItem('ihab_current_session');
+    localStorage.removeItem(STORAGE_PREFIX + 'current_session');
 }
 
 function viewInvoice(id) {
@@ -733,7 +738,7 @@ function viewInvoice(id) {
 function deleteInvoice(id) {
     if (!confirm('이 문서를 삭제하시겠습니까?')) return;
     const list = getSavedList().filter(i => i.id !== id);
-    localStorage.setItem('ihab_invoices', JSON.stringify(list));
+    localStorage.setItem(STORAGE_PREFIX + 'invoices', JSON.stringify(list));
     renderSavedList();
 }
 
@@ -760,7 +765,7 @@ renderSavedList();
 
 // 새로고침 시 마지막으로 생성/조회한 견적서 화면 복원
 (function restoreCurrentSession() {
-    const raw = localStorage.getItem('ihab_current_session');
+    const raw = localStorage.getItem(STORAGE_PREFIX + 'current_session');
     if (!raw) return;
     let inv;
     try { inv = JSON.parse(raw); } catch (e) { return; }
